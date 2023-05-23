@@ -4,6 +4,7 @@ from torch_sparse import SparseTensor
 
 def load_data(path, train_file="train.txt", test_file="test.txt"):
     """
+    dataset/gowalla
     Make user, item interaction to (# user + # item) x (# user + # item) matrix M.
 
     M[:# user, :# item] = 0
@@ -60,8 +61,14 @@ def load_data(path, train_file="train.txt", test_file="test.txt"):
 
     train_item = train_item + n_user
     test_item = test_item + n_user
+    
+    train_row = torch.cat([train_user, train_item])
+    train_col = torch.cat([train_item, train_user])
+    test_row = torch.cat([test_user, test_item])
+    test_col = torch.cat([test_item, test_user])
+
     num_nodes = n_user + m_item
-    train_adj = SparseTensor(row=train_user, col=train_item, sparse_sizes=(num_nodes, num_nodes))
-    test_adj = SparseTensor(row=test_user, col=test_item, sparse_sizes=(num_nodes, num_nodes))
+    train_adj = SparseTensor(row=train_row, col=train_col, sparse_sizes=(num_nodes, num_nodes))
+    test_adj = SparseTensor(row=test_row, col=test_col, sparse_sizes=(num_nodes, num_nodes))
 
     return n_user, m_item, train_adj, train_unique_users, test_adj, test_unique_users
