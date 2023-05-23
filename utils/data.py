@@ -30,12 +30,15 @@ def load_data(path, train_file="train.txt", test_file="test.txt"):
         for l in f.readlines():
             if len(l) > 0:
                 l = l.strip('\n').split(' ')
-                items = [int(i) for i in l[1:]]
+                try:
+                    items = [int(i) for i in l[1:]]
+                    m_item = max(m_item, max(items))
+                except:
+                    items = []
                 uid = int(l[0])
                 train_unique_users.append(uid)
                 train_user.extend([uid] * len(items))
                 train_item.extend(items)
-                m_item = max(m_item, max(items))
                 n_user = max(n_user, uid)
                 train_data_size += len(items)
     train_unique_users = torch.Tensor(train_unique_users).type(torch.long)
@@ -46,12 +49,15 @@ def load_data(path, train_file="train.txt", test_file="test.txt"):
         for l in f.readlines():
             if len(l) > 0:
                 l = l.strip('\n').split(' ')
-                items = [int(i) for i in l[1:]]
+                try:
+                    items = [int(i) for i in l[1:]]
+                    m_item = max(m_item, max(items))
+                except:
+                    items = []
                 uid = int(l[0])
                 test_unique_users.append(uid)
                 test_user.extend([uid] * len(items))
                 test_item.extend(items)
-                m_item = max(m_item, max(items))
                 n_user = max(n_user, uid)
                 test_data_size += len(items)
     m_item += 1
