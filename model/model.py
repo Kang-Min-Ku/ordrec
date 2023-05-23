@@ -1,4 +1,4 @@
-from layer import ONGNNConv
+from model.layer import ONGNNConv
 import torch
 import torch.nn.functional as F
 from torch.nn import Module, ModuleList, Linear, LayerNorm
