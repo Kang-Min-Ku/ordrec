@@ -5,6 +5,7 @@ from torch_sparse import SparseTensor
 def load_data(path, train_file="train.txt", test_file="test.txt"):
     """
     Make user, item interaction to (# user + # item) x (# user + # item) matrix M.
+    Therefore, first item id becomes (# user)
 
     M[:# user, :# item] = 0
     M[:# user, # item:] = 1 or 0
