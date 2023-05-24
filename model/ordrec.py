@@ -1,4 +1,5 @@
 from model.GONN import GONN
+import torch
 import torch.nn as nn
 
 class OrdRec():
@@ -15,6 +16,9 @@ class OrdRec():
         nn.init.xavier_uniform_(self.embedding.weight)
 
     def forward(self, node_idx, edge_index):
+        if self.train():
+            assert torch.all(node_idx < self.num_nodes)
+
         x = self.embedding(node_idx)
         encode_values = self.GONN(x, edge_index)
         return encode_values
