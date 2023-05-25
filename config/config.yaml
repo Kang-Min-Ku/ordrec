@@ -5,6 +5,10 @@ chunk_size: 64
 diff_or: true
 dropout_rate: 0
 dropout_rate2: 0
+train_valid_split: true
+train_valid_split_rate:
+- 0.8
+- 0.2
 epochs: 2000
 full_batch: false
 batch_size: 128
