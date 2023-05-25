@@ -93,7 +93,7 @@ class MessagePassing(torch.nn.Module):
         self.node_dim = node_dim
         self.decomposed_layers = decomposed_layers
 
-        self.inspector = Inspector(self)
+        self.inspector = Inspector(self) # check(inspect) function
         self.inspector.inspect(self.message)
         self.inspector.inspect(self.aggregate, pop_first=True)
         self.inspector.inspect(self.message_and_aggregate, pop_first=True)
@@ -423,7 +423,7 @@ class MessagePassing(torch.nn.Module):
         """
         if ptr is not None:
             ptr = expand_left(ptr, dim=self.node_dim, dims=inputs.dim())
-            return segment_csr(inputs, ptr, reduce=self.aggr)
+            return segment_csr(inputs, ptr, reduce=self.aggr) # Don't have to normalize adjacency matrix
         else:
             return scatter(inputs, index, dim=self.node_dim, dim_size=dim_size,
                            reduce=self.aggr)
