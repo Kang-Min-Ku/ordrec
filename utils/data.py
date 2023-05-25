@@ -79,3 +79,6 @@ def load_data(path, train_file="train.txt", test_file="test.txt"):
     test_adj = SparseTensor(row=test_row, col=test_col, sparse_sizes=(num_nodes, num_nodes))
 
     return n_user, m_item, train_adj, train_unique_users, test_adj, test_unique_users
+
+def train_valid_split(params, row, col, num_users, num_items):
+    NotImplementedError
