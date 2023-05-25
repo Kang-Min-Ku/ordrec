@@ -61,6 +61,6 @@ class GONN(Module):
         x = F.dropout(x, p=self.params['dropout_rate'], training=self.training)
         x = self.linear_trans_out(x)
 
-        encode_values = dict(zip(['x', 'check_signal'], [x, check_signal]))
+        #encode_values = dict(zip(['x', 'check_signal'], [x, check_signal]))
         
-        return encode_values
+        return x
