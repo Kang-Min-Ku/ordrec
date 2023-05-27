@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch_sparse import SparseTensor
 import torch.optim as optim
+import numpy as np
 
 from model.ordrec import OrdRec
 
@@ -33,9 +34,25 @@ class Trainer:
 
         self.optimizer = optimizer(self.model.parameters(), lr=params["learning_rate"])
         self.loss_func = loss_func
+        
+        self.epochs = params["epochs"]
+        self.batch_size = params["batch_size"]
+        self.activation = torch.nn.Sigmoid()
 
     def train(self):
-        NotImplementedError
+        n_batch = self.num_users// self.batch_size + 1   
+        for epoch in range(self.epochs):
+            # self.train()
+            user_idx = torch.randperm(self.num_users)
+            print(self.device)
+            for batch_idx in range(n_batch):
+                batch_users = user_idx[batch_idx * self.batch_size: (batch_idx+1)*self.batch_size]
+                batch_adj = self.train_adj[batch_users].to(self.device)
+                rating = self.model.train_batch(batch_users, batch_adj)
+                loss = self.loss_func(self.activation(rating), batch_adj)
+                loss.backward()
+                self.optimizer.step()
     
+
     def test(self):
-        NotImplementedError
+        pred = self.activation(self.model.rating())
