@@ -30,3 +30,13 @@ class OrdRec(nn.Module):
         item_embedding = all_embedding[self.num_users:]
 
         return user_embedding, item_embedding
+
+
+    def train_batch(self, user_idx, edge_index):
+        user_embedding, item_embedding = self.forward(user_idx, edge_index)
+        return torch.matmul(user_embedding, item_embedding.t())
+
+    def rating(self):
+        user_embedding = self.x[:self.num_users]
+        item_embedding = self.x[self.num_users:]
+        return torch.matmul(user_embedding, item_embedding.t())
