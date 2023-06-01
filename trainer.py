@@ -43,11 +43,11 @@ class Trainer:
         self.activation = torch.nn.Sigmoid()
 
     def train(self):
-        n_batch = self.num_users// self.batch_size + 1   
+        n_batch = self.num_users// self.batch_size + 1
+        user_idx = torch.randperm(self.num_users)
         for epoch in range(self.epochs):
             # self.train()
-            user_idx = torch.randperm(self.num_users)
-            print(self.device)
+
             for batch_idx in range(n_batch):
                 batch_users = user_idx[batch_idx * self.batch_size: (batch_idx+1)*self.batch_size]
                 # batch_adj = self.train_adj[batch_users].to(self.device)
@@ -59,10 +59,10 @@ class Trainer:
                 # print(dir(self.train_target))
                 
                 loss = self.loss_func(self.activation(rating), self.train_target[batch_users].to_dense())
-                # print(f"Epoch:{epoch} Loss:{loss}")
+                print(f"Epoch:{epoch} Loss:{loss}")
                 loss.backward()
                 self.optimizer.step()
-                print(self.model.x(batch_users[:5]))
+                # print(self.model.x(batch_users[:5]))
                 print("--------------------------------------------------")
 
     def test(self):

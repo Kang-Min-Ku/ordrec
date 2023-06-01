@@ -49,7 +49,7 @@ class GONN(Module):
 
     def forward(self, user_idx, edge_index):
         # print(self.x[user_idx[:5]])
-        print(self.x(user_idx[:5]))
+        # print(self.x(user_idx[:5]))
         check_signal = []
         
         if self.train():
