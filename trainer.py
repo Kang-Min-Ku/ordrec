@@ -6,6 +6,7 @@ import torch.optim as optim
 import numpy as np
 
 from model.ordrec import OrdRec
+from model.GONN import GONN
 
 class Trainer:
     def __init__(self,
@@ -31,7 +32,7 @@ class Trainer:
         
         self.train_target = train_adj[:self.num_users, self.num_users:]
 
-        self.model = OrdRec(params, self.num_users, self.num_items)
+        self.model = GONN(params, self.num_users, self.num_items)
         self.model = self.model.to(self.device)
 
         self.optimizer = optimizer(self.model.parameters(), lr=params["learning_rate"])
@@ -58,10 +59,11 @@ class Trainer:
                 # print(dir(self.train_target))
                 
                 loss = self.loss_func(self.activation(rating), self.train_target[batch_users].to_dense())
-                print(f"Epoch:{epoch} Loss:{loss}")
+                # print(f"Epoch:{epoch} Loss:{loss}")
                 loss.backward()
                 self.optimizer.step()
-    
+                print(self.model.x(batch_users[:5]))
+                print("--------------------------------------------------")
 
     def test(self):
         pred = self.activation(self.model.rating())
