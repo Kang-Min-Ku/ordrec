@@ -20,7 +20,7 @@ class Trainer:
                  loss_func=torch.nn.BCELoss):
         self.params = params
         self.device = "cuda" if params["use_cuda"] and torch.cuda.is_available() else "cpu"
-
+        print(self.device)
         self.num_users = num_users
         self.num_items = num_items
 
@@ -44,14 +44,11 @@ class Trainer:
 
     def train(self):
         n_batch = self.num_users// self.batch_size + 1
-        user_idx = torch.randperm(self.num_users)
+        
         for epoch in range(self.epochs):
-            # self.train()
-
+            user_idx = torch.randperm(self.num_users)
             for batch_idx in range(n_batch):
                 batch_users = user_idx[batch_idx * self.batch_size: (batch_idx+1)*self.batch_size]
-                # batch_adj = self.train_adj[batch_users].to(self.device)
-                # print(self.train_adj)
                 rating = self.model.train_batch(batch_users, self.train_adj)
                 
                 # print(rating.size())

@@ -55,7 +55,14 @@ class GONN(Module):
         if self.train():
             assert torch.all(user_idx < self.num_users)
 
-        x = self.x(torch.arange(self.num_nodes))
+        if self.x.is_cuda:
+            x = self.x(torch.arange(self.num_nodes).cuda())
+        else:
+            x = self.x(torch.arange(self.num_nodes))
+
+        
+        
+        print(x.is_cuda)
 
         for i in range(len(self.linear_trans_in)):
             x = F.dropout(x, p=self.params['dropout_rate'], training=self.training)
