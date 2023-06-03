@@ -9,7 +9,8 @@ def unlist_dic_value(dic):
 def compute_metrics(pred_u, target_u, top_k):
     pred_k = pred_u[:top_k]
     num_target_items = len(target_u)
-
+    # print(pred_k)
+    # print(target_u)
     hits_k = [(i + 1, item) for i, item in enumerate(pred_k) if item in target_u]
     num_hits = len(hits_k)
 

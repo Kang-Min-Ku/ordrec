@@ -28,7 +28,7 @@ class Trainer:
         assert train_adj is not None, "Require train adj"
         assert test_adj is not None, "Require test adj"
         self.train_adj = train_adj.cuda()
-        self.valid_adj = valid_adj.cuda()
+        self.valid_adj = valid_adj
         self.test_adj = test_adj
         
         self.top_k = 20
@@ -44,6 +44,7 @@ class Trainer:
         self.epochs = params["epochs"]
         self.batch_size = params["batch_size"]
         self.activation = torch.nn.Sigmoid()
+        self.valid_batch = True
         
 
     def train(self):
@@ -51,7 +52,7 @@ class Trainer:
         
         for epoch in range(self.epochs):
             user_idx = torch.randperm(self.num_users).cuda()
-            for batch_idx in range(1):
+            for batch_idx in range(n_batch):
                 batch_users = user_idx[batch_idx * self.batch_size: min(self.num_users, (batch_idx+1)*self.batch_size)]
                 rating = self.model.train_batch(batch_users, self.train_adj)
                                 
@@ -60,30 +61,40 @@ class Trainer:
                 loss.backward()
                 self.optimizer.step()
                 # print(self.model.x(batch_users[:5]))
-            
+                print(f"[AE] epoch: {epoch}, loss: {loss}")
             print("--------------------------------------------------")
-            prec, recall, ndcg = self.eval_implicit(self.top_k)
-            print("[AE] epoch %d, loss: %f"%(epoch))
-            print(f"(AE VALID) prec@{self.eval_topk} {prec:.5f}, recall@{self.eval_topk} {recall:.5f}, ndcg@{self.eval_topk} {ndcg:.5f}")
+            # prec, recall, ndcg = self.eval_implicit(self.valid_adj)
+            print(f"[AE] epoch: {epoch}, loss: {loss}")
+            # print(f"(AE VALID) prec@{self.top_k} {prec:.5f}, recall@{self.top_k} {recall:.5f}, ndcg@{self.top_k} {ndcg:.5f}")
 
     def test(self):
         # pred = self.activation(self.model.rating())
-        prec, recall, ndcg = self.eval_implicit(self.top_k)
+        prec, recall, ndcg = self.eval_implicit(self.test_adj)
         print("Test Result")
-        print(f"(AE VALID) prec@{self.eval_topk} {prec:.5f}, recall@{self.eval_topk} {recall:.5f}, ndcg@{self.eval_topk} {ndcg:.5f}")
+        print(f"(AE VALID) prec@{self.top_k} {prec:.5f}, recall@{self.top_k} {recall:.5f}, ndcg@{self.top_k} {ndcg:.5f}")
     
-    def eval_implicit(self, top_k):        
-        with torch.no_grad():
-            pred = self.model.rating().to("cpu")
-            # pred = self.activation()
-            print(pred[:5])
-            train_user_id = self.train_adj.storage.row()
-            train_item_id = self.train_adj.storage.col()
-            pred[train_user_id, train_item_id] = 0
-            pred = torch.argsort(pred)[::-1]
-            print(pred[:5])
-            target = torch.where(self.valid_adj >= 0.5)[0]
-            prec_k, recall_k, ndcg_k = compute_metrics(pred, target, top_k)
 
 
-        return prec_k, recall_k, ndcg_k
+    def eval_implicit(self, targets):
+        if self.valid_batch:
+            prec_list = []
+            recall_list = []
+            ndcg_list = []
+            with torch.no_grad():
+                for user_id in range(self.num_users):
+                    rating = self.model.rating(user_id)
+                    rating = self.activation(rating)
+                    # print(rating[:5])
+                    pred = torch.where(self.train_target[user_id].to_dense() > 0.5, torch.tensor(0,dtype=torch.float), rating)
+                    pred = pred.detach().cpu().numpy()[0]
+                    # print(pred[:5])
+                    pred = np.argsort(pred)[::-1]
+                    # print(pred[:5])
+                    target = targets[user_id]
+                    # print(user_id)
+                    prec_k, recall_k, ndcg_k = compute_metrics(pred, target, self.top_k)
+                    prec_list.append(prec_k)
+                    recall_list.append(recall_k)
+                    ndcg_list.append(ndcg_k)
+
+            return np.mean(prec_list), np.mean(recall_list), np.mean(ndcg_list)

@@ -84,8 +84,9 @@ class GONN(Module):
         user_embedding, item_embedding = self.forward(user_idx, edge_index)
         return torch.matmul(user_embedding, item_embedding.t())
 
-    def rating(self):
+    def rating(self, user_idx):
         embeddings = self.x(torch.arange(self.num_nodes).cuda())
-        user_embedding = embeddings[:self.num_users]
+        user_embedding = embeddings[user_idx]
         item_embedding = embeddings[self.num_users:]
         return torch.matmul(user_embedding, item_embedding.t())
+

@@ -21,13 +21,13 @@ def load_data(path, train_file="splitTrain.txt", valid_file="valid.txt",test_fil
     valid_file = os.path.join(path, valid_file)
     test_file = os.path.join(path, test_file)
     train_unique_users, train_item, train_user = [], [], []
-    valid_unique_users, valid_item, valid_user = [], [], []
-    test_unique_users, test_item, test_user = [], [], []
+    valid_data = {}
+    test_data = {}
+    # valid_unique_users, valid_item, valid_user = [], [], []
+    # test_unique_users, test_item, test_user = [], [], []
     n_user = 0
     m_item = 0
     train_data_size = 0
-    valid_data_size = 0
-    test_data_size = 0
 
     with open(train_file, "r") as f:
         for l in f.readlines():
@@ -58,14 +58,15 @@ def load_data(path, train_file="splitTrain.txt", valid_file="valid.txt",test_fil
                 except:
                     items = []
                 uid = int(l[0])
-                valid_unique_users.append(uid)
-                valid_user.extend([uid] * len(items))
-                valid_item.extend(items)
+                valid_data[uid] = items
+                # valid_unique_users.append(uid)
+                # valid_user.extend([uid] * len(items))
+                # valid_item.extend(items)
                 n_user = max(n_user, uid)
-                valid_data_size += len(items)
-    valid_unique_users = torch.Tensor(valid_unique_users).type(torch.long)
-    valid_user = torch.Tensor(valid_user).type(torch.long)
-    valid_item = torch.Tensor(valid_item).type(torch.long)
+                # valid_data_size += len(items)
+    # valid_unique_users = torch.Tensor(valid_unique_users).type(torch.long)
+    # valid_user = torch.Tensor(valid_user).type(torch.long)
+    # valid_item = torch.Tensor(valid_item).type(torch.long)
 
     with open(test_file) as f:
         for l in f.readlines():
@@ -77,34 +78,37 @@ def load_data(path, train_file="splitTrain.txt", valid_file="valid.txt",test_fil
                 except:
                     items = []
                 uid = int(l[0])
-                test_unique_users.append(uid)
-                test_user.extend([uid] * len(items))
-                test_item.extend(items)
+                test_data[uid] = items
+    #             test_unique_users.append(uid)
+    #             test_user.extend([uid] * len(items))
+    #             test_item.extend(items)
                 n_user = max(n_user, uid)
-                test_data_size += len(items)
+    #             test_data_size += len(items)
+    
     m_item += 1
     n_user += 1
-    test_unique_users = torch.Tensor(test_unique_users).type(torch.long)
-    test_user = torch.Tensor(test_user).type(torch.long)
-    test_item = torch.Tensor(test_item).type(torch.long)
+    # test_unique_users = torch.Tensor(test_unique_users).type(torch.long)
+    # test_user = torch.Tensor(test_user).type(torch.long)
+    # test_item = torch.Tensor(test_item).type(torch.long)
 
     train_item = train_item + n_user
-    valid_item = valid_item + n_user
-    test_item = test_item + n_user
+    # valid_item = valid_item + n_user
+    # test_item = test_item + n_user
     
     train_row = torch.cat([train_user, train_item])
     train_col = torch.cat([train_item, train_user])
-    valid_row = torch.cat([train_user, train_item])
-    valid_col = torch.cat([train_item, train_user])
-    test_row = torch.cat([test_user, test_item])
-    test_col = torch.cat([test_item, test_user])
+    # valid_row = torch.cat([train_user, train_item])
+    # valid_col = torch.cat([train_item, train_user])
+    # test_row = torch.cat([test_user, test_item])
+    # test_col = torch.cat([test_item, test_user])
 
     num_nodes = n_user + m_item
     train_adj = SparseTensor(row=train_row, col=train_col, sparse_sizes=(num_nodes, num_nodes))
-    valid_adj = SparseTensor(row=valid_row, col=valid_col, sparse_sizes=(num_nodes, num_nodes))
-    test_adj = SparseTensor(row=test_row, col=test_col, sparse_sizes=(num_nodes, num_nodes))
+    # valid_adj = SparseTensor(row=valid_row, col=valid_col, sparse_sizes=(num_nodes, num_nodes))
+    # test_adj = SparseTensor(row=test_row, col=test_col, sparse_sizes=(num_nodes, num_nodes))
 
-    return n_user, m_item, train_adj, train_unique_users, valid_adj, valid_unique_users, test_adj, test_unique_users
+    return n_user, m_item, train_adj, train_unique_users, valid_data, test_data
+    # return n_user, m_item, train_adj, train_unique_users, valid_adj, valid_unique_users, test_adj, test_unique_users
 
 def train_valid_split(params, row, col, num_users, num_items):
     NotImplementedError
