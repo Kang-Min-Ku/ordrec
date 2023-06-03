@@ -33,7 +33,7 @@ class Trainer:
         
         self.top_k = 20
         
-        self.train_target = train_adj[:self.num_users, self.num_users:]
+        self.train_target = train_adj[:self.num_users, self.num_users:].cuda()
 
         self.model = GONN(params, self.num_users, self.num_items)
         self.model = self.model.to(self.device)
@@ -51,7 +51,7 @@ class Trainer:
         
         for epoch in range(self.epochs):
             user_idx = torch.randperm(self.num_users).cuda()
-            for batch_idx in range(n_batch):
+            for batch_idx in range(1):
                 batch_users = user_idx[batch_idx * self.batch_size: min(self.num_users, (batch_idx+1)*self.batch_size)]
                 rating = self.model.train_batch(batch_users, self.train_adj)
                                 
@@ -62,28 +62,28 @@ class Trainer:
                 # print(self.model.x(batch_users[:5]))
             
             print("--------------------------------------------------")
-            prec, recall, ndcg = self.eval_implicit(rating, self.top_k)
+            prec, recall, ndcg = self.eval_implicit(self.top_k)
             print("[AE] epoch %d, loss: %f"%(epoch))
             print(f"(AE VALID) prec@{self.eval_topk} {prec:.5f}, recall@{self.eval_topk} {recall:.5f}, ndcg@{self.eval_topk} {ndcg:.5f}")
 
     def test(self):
-        pred = self.activation(self.model.rating())
-        prec, recall, ndcg = self.eval_implicit(pred, self.top_k)
+        # pred = self.activation(self.model.rating())
+        prec, recall, ndcg = self.eval_implicit(self.top_k)
         print("Test Result")
         print(f"(AE VALID) prec@{self.eval_topk} {prec:.5f}, recall@{self.eval_topk} {recall:.5f}, ndcg@{self.eval_topk} {ndcg:.5f}")
     
-    def eval_implicit(self, pred_u, top_k, n_batch):        
+    def eval_implicit(self, top_k):        
         with torch.no_grad():
-            pred = self.model.rating()
-            for batch_idx in range(n_batch):
-                torch.where(self.train_adj[batch_idx * self.batch_size: min(self.num_users, (batch_idx+1)*self.batch_size)] < 0, pred, 0)
-            missing_item_ids = torch.where(self.train_adj < 0.5)[0]
-            pred_u_score = pred[missing_item_ids]
-            pred_u = np.argsort(pred_u_score)[::-1]
-
-            target_u = np.where(self.valid_adj >= 0.5)[0]
-            np.where(self.train_adj < )
-            prec_k, recall_k, ndcg_k = compute_metrics(pred_u, target_u, top_k)
+            pred = self.model.rating().to("cpu")
+            # pred = self.activation()
+            print(pred[:5])
+            train_user_id = self.train_adj.storage.row()
+            train_item_id = self.train_adj.storage.col()
+            pred[train_user_id, train_item_id] = 0
+            pred = torch.argsort(pred)[::-1]
+            print(pred[:5])
+            target = torch.where(self.valid_adj >= 0.5)[0]
+            prec_k, recall_k, ndcg_k = compute_metrics(pred, target, top_k)
 
 
         return prec_k, recall_k, ndcg_k
