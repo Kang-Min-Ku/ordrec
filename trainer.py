@@ -5,7 +5,7 @@ from torch_sparse import SparseTensor
 import torch.optim as optim
 import numpy as np
 from utils.util import compute_metrics
-
+import time
 from model.ordrec import OrdRec
 from model.GONN import GONN
 
@@ -61,40 +61,47 @@ class Trainer:
                 loss.backward()
                 self.optimizer.step()
                 # print(self.model.x(batch_users[:5]))
-                print(f"[AE] epoch: {epoch}, loss: {loss}")
+                # print(f"[AE] epoch: {epoch}, loss: {loss}")
             print("--------------------------------------------------")
-            # prec, recall, ndcg = self.eval_implicit(self.valid_adj)
+            prec, recall, ndcg = self.eval_implicit(self.valid_adj, user_idx)
             print(f"[AE] epoch: {epoch}, loss: {loss}")
-            # print(f"(AE VALID) prec@{self.top_k} {prec:.5f}, recall@{self.top_k} {recall:.5f}, ndcg@{self.top_k} {ndcg:.5f}")
+            print(f"(AE VALID) prec@{self.top_k} {prec:.5f}, recall@{self.top_k} {recall:.5f}, ndcg@{self.top_k} {ndcg:.5f}")
 
     def test(self):
         # pred = self.activation(self.model.rating())
-        prec, recall, ndcg = self.eval_implicit(self.test_adj)
+        user_idx = torch.randperm(self.num_users).cuda()
+        prec, recall, ndcg = self.eval_implicit(self.test_adj, user_idx)
         print("Test Result")
-        print(f"(AE VALID) prec@{self.top_k} {prec:.5f}, recall@{self.top_k} {recall:.5f}, ndcg@{self.top_k} {ndcg:.5f}")
+        print(f"(AE VALID) prec@{self.top_k} {prec}, recall@{self.top_k} {recall}, ndcg@{self.top_k} {ndcg}")
     
 
 
-    def eval_implicit(self, targets):
-        if self.valid_batch:
-            prec_list = []
-            recall_list = []
-            ndcg_list = []
-            with torch.no_grad():
-                for user_id in range(self.num_users):
-                    rating = self.model.rating(user_id)
-                    rating = self.activation(rating)
-                    # print(rating[:5])
-                    pred = torch.where(self.train_target[user_id].to_dense() > 0.5, torch.tensor(0,dtype=torch.float), rating)
-                    pred = pred.detach().cpu().numpy()[0]
-                    # print(pred[:5])
-                    pred = np.argsort(pred)[::-1]
-                    # print(pred[:5])
+    def eval_implicit(self, targets, user_idx):
+        start = time.time()
+        prec_list = []
+        recall_list = []
+        ndcg_list = []
+        with torch.no_grad():
+            valid_batchsize = 1024
+            n_batch = self.num_users // valid_batchsize + 1
+            for batch_idx in range(n_batch):
+                batch_users = user_idx[batch_idx * valid_batchsize: min(self.num_users, (batch_idx+1)*valid_batchsize)]
+                rating = self.model.rating(batch_users)
+                rating = self.activation(rating)
+                # print(rating[:5])
+                pred = torch.where(self.train_target[batch_users].to_dense() > 0.5, torch.tensor(0,dtype=torch.float).cuda(), rating)
+                pred = pred.detach().cpu().numpy()
+                # print(pred[:5])
+                pred = np.argsort(pred, axis=1)[::-1]
+                # print(pred[:5])
+                for i, user_id in enumerate(batch_users.detach().cpu().numpy()):
                     target = targets[user_id]
                     # print(user_id)
-                    prec_k, recall_k, ndcg_k = compute_metrics(pred, target, self.top_k)
+                    prec_k, recall_k, ndcg_k = compute_metrics(pred[i], target, self.top_k)
                     prec_list.append(prec_k)
                     recall_list.append(recall_k)
                     ndcg_list.append(ndcg_k)
-
-            return np.mean(prec_list), np.mean(recall_list), np.mean(ndcg_list)
+        
+        print("Executed evaluation:",time.time() - start)
+        
+        return np.mean(prec_list), np.mean(recall_list), np.mean(ndcg_list)
