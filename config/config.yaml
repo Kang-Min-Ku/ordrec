@@ -30,14 +30,14 @@ index_split:
 learning_rate: 0.01
 log_freq: 200
 model: ONGNN
-num_layers: 4
+num_layers: 8
 num_layers_input: 2
 patience: 200
 save_model: false
 seed: 42
 simple_gating: false
 # task: Actor
-data_path: dataset/gowalla
+data_path: dataset/movielens100k
 tm: true
 weight_decay: 0.0005
 weight_decay2: 0.05
