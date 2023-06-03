@@ -31,7 +31,7 @@ class Trainer:
         self.valid_adj = valid_adj
         self.test_adj = test_adj
         
-        self.top_k = 20
+        self.top_k = 50
         
         self.train_target = train_adj[:self.num_users, self.num_users:].cuda()
 
@@ -63,21 +63,21 @@ class Trainer:
                 # print(self.model.x(batch_users[:5]))
                 # print(f"[AE] epoch: {epoch}, loss: {loss}")
             print("--------------------------------------------------")
-            prec, recall, ndcg = self.eval_implicit(self.valid_adj, user_idx)
+            prec, recall, ndcg = self.eval_implicit(self.valid_adj)
             print(f"[AE] epoch: {epoch}, loss: {loss}")
-            print(f"(AE VALID) prec@{self.top_k} {prec:.5f}, recall@{self.top_k} {recall:.5f}, ndcg@{self.top_k} {ndcg:.5f}")
+            print(f"(AE VALID) prec@{self.top_k} {prec}, recall@{self.top_k} {recall}, ndcg@{self.top_k} {ndcg}")
 
     def test(self):
         # pred = self.activation(self.model.rating())
-        user_idx = torch.randperm(self.num_users).cuda()
-        prec, recall, ndcg = self.eval_implicit(self.test_adj, user_idx)
+        prec, recall, ndcg = self.eval_implicit(self.test_adj)
         print("Test Result")
         print(f"(AE VALID) prec@{self.top_k} {prec}, recall@{self.top_k} {recall}, ndcg@{self.top_k} {ndcg}")
     
 
 
-    def eval_implicit(self, targets, user_idx):
+    def eval_implicit(self, targets):
         start = time.time()
+        user_idx = torch.arange(self.num_users).cuda()
         prec_list = []
         recall_list = []
         ndcg_list = []
@@ -92,7 +92,7 @@ class Trainer:
                 pred = torch.where(self.train_target[batch_users].to_dense() > 0.5, torch.tensor(0,dtype=torch.float).cuda(), rating)
                 pred = pred.detach().cpu().numpy()
                 # print(pred[:5])
-                pred = np.argsort(pred, axis=1)[::-1]
+                pred = np.argsort(pred, axis=1)[:,::-1]
                 # print(pred[:5])
                 for i, user_id in enumerate(batch_users.detach().cpu().numpy()):
                     target = targets[user_id]
