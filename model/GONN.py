@@ -52,17 +52,8 @@ class GONN(Module):
         # print(self.x(user_idx[:5]))
         check_signal = []
         
-        if self.train():
-            assert torch.all(user_idx < self.num_users)
 
-        if self.x.is_cuda:
-            x = self.x(torch.arange(self.num_nodes).cuda())
-        else:
-            x = self.x(torch.arange(self.num_nodes))
-
-        
-        
-        print(x.is_cuda)
+        x = self.x(torch.arange(self.num_nodes).cuda())
 
         for i in range(len(self.linear_trans_in)):
             x = F.dropout(x, p=self.params['dropout_rate'], training=self.training)
@@ -94,6 +85,7 @@ class GONN(Module):
         return torch.matmul(user_embedding, item_embedding.t())
 
     def rating(self):
-        user_embedding = self.x[:self.num_users]
-        item_embedding = self.x[self.num_users:]
+        embeddings = self.x(torch.arange(self.num_nodes).cuda())
+        user_embedding = embeddings[:self.num_users]
+        item_embedding = embeddings[self.num_users:]
         return torch.matmul(user_embedding, item_embedding.t())

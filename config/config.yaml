@@ -30,7 +30,7 @@ index_split:
 learning_rate: 0.01
 log_freq: 200
 model: ONGNN
-num_layers: 8
+num_layers: 2
 num_layers_input: 2
 patience: 200
 save_model: false
