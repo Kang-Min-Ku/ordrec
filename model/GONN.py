@@ -13,7 +13,7 @@ class GONN(Module):
         self.num_nodes = self.num_users+self.num_items
          
         self.x = nn.Embedding(self.num_nodes, self.params['in_channel'])
-        
+
         self.linear_trans_in = ModuleList()
         self.linear_trans_out = Linear(params['hidden_channel'], params['out_channel'])
         self.norm_input = ModuleList()
@@ -47,12 +47,12 @@ class GONN(Module):
         self.params_conv = list(set(list(self.convs.parameters())+list(self.tm_net.parameters())))
         self.params_others = list(self.linear_trans_in.parameters())+list(self.linear_trans_out.parameters())
 
+    def init_embedding(self):
+        nn.init.xavier_uniform_(self.x)
+
     def forward(self, user_idx, edge_index):
-        # print(self.x[user_idx[:5]])
-        # print(self.x(user_idx[:5]))
         check_signal = []
         
-
         x = self.x(torch.arange(self.num_nodes).cuda())
 
         for i in range(len(self.linear_trans_in)):
@@ -75,18 +75,11 @@ class GONN(Module):
         
         user_embedding = x[user_idx]
         item_embedding = x[self.num_users:]
-
-        #encode_values = dict(zip(['x', 'check_signal'], [x, check_signal]))
-        
+      
         return user_embedding, item_embedding
     
     def train_batch(self, user_idx, edge_index):
         user_embedding, item_embedding = self.forward(user_idx, edge_index)
         return torch.matmul(user_embedding, item_embedding.t())
 
-    def rating(self, user_idx):
-        embeddings = self.x(torch.arange(self.num_nodes).cuda())
-        user_embedding = embeddings[user_idx]
-        item_embedding = embeddings[self.num_users:]
-        return torch.matmul(user_embedding, item_embedding.t())
 

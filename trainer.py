@@ -52,23 +52,25 @@ class Trainer:
         
         for epoch in range(self.epochs):
             user_idx = torch.randperm(self.num_users).cuda()
+            epoch_loss = 0
             for batch_idx in range(n_batch):
+                self.optimizer.zero_grad()
                 batch_users = user_idx[batch_idx * self.batch_size: min(self.num_users, (batch_idx+1)*self.batch_size)]
+                print(self.train_adj[4].to_dense().sum())
                 rating = self.model.train_batch(batch_users, self.train_adj)
-                                
                 loss = self.loss_func(self.activation(rating), self.train_target[batch_users].to_dense())
-                # print(f"Epoch:{epoch} Loss:{loss}")
+                print((self.train_adj[4,self.num_users:].to_dense() == self.train_target[4].to_dense()).sum())
                 loss.backward()
                 self.optimizer.step()
-                # print(self.model.x(batch_users[:5]))
-                # print(f"[AE] epoch: {epoch}, loss: {loss}")
-            print("--------------------------------------------------")
-            prec, recall, ndcg = self.eval_implicit(self.valid_adj)
-            print(f"[AE] epoch: {epoch}, loss: {loss}")
-            print(f"(AE VALID) prec@{self.top_k} {prec}, recall@{self.top_k} {recall}, ndcg@{self.top_k} {ndcg}")
+                epoch_loss += loss
+            if epoch % 20 == 0:
+                print("--------------------------------------------------")
+                prec, recall, ndcg = self.eval_implicit(self.valid_adj)
+                print(f"[AE] epoch: {epoch}, loss: {epoch_loss}")
+                print(f"(AE VALID) prec@{self.top_k} {prec}, recall@{self.top_k} {recall}, ndcg@{self.top_k} {ndcg}")
+                print("--------------------------------------------------")
 
     def test(self):
-        # pred = self.activation(self.model.rating())
         prec, recall, ndcg = self.eval_implicit(self.test_adj)
         print("Test Result")
         print(f"(AE VALID) prec@{self.top_k} {prec}, recall@{self.top_k} {recall}, ndcg@{self.top_k} {ndcg}")
@@ -82,22 +84,20 @@ class Trainer:
         recall_list = []
         ndcg_list = []
         with torch.no_grad():
-            valid_batchsize = 1024
+            self.model.eval()
+            valid_batchsize = self.batch_size
             n_batch = self.num_users // valid_batchsize + 1
             for batch_idx in range(n_batch):
                 batch_users = user_idx[batch_idx * valid_batchsize: min(self.num_users, (batch_idx+1)*valid_batchsize)]
-                rating = self.model.rating(batch_users)
+                rating = self.model.train_batch(batch_users, self.train_adj)
                 rating = self.activation(rating)
-                # print(rating[:5])
-                pred = torch.where(self.train_target[batch_users].to_dense() > 0.5, torch.tensor(0,dtype=torch.float).cuda(), rating)
+                pred = torch.where(self.train_target[batch_users].to_dense() > 0, torch.tensor(-2.0,dtype=torch.float).cuda(), rating)
                 pred = pred.detach().cpu().numpy()
-                # print(pred[:5])
-                pred = np.argsort(pred, axis=1)[:,::-1]
-                # print(pred[:5])
+                pred_u = np.argsort(pred, axis=1)[:,::-1]
+
                 for i, user_id in enumerate(batch_users.detach().cpu().numpy()):
                     target = targets[user_id]
-                    # print(user_id)
-                    prec_k, recall_k, ndcg_k = compute_metrics(pred[i], target, self.top_k)
+                    prec_k, recall_k, ndcg_k = compute_metrics(pred_u[i], target, self.top_k)
                     prec_list.append(prec_k)
                     recall_list.append(recall_k)
                     ndcg_list.append(ndcg_k)
