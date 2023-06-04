@@ -11,7 +11,7 @@ train_valid_split_rate:
 - 0.2
 epochs: 2000
 full_batch: false
-batch_size: 128
+batch_size: 2048
 global_gating: false
 in_channel: 256
 hidden_channel: 256
@@ -27,7 +27,7 @@ index_split:
 - 7
 - 8
 - 9
-learning_rate: 0.01
+learning_rate: 0.0001
 log_freq: 200
 model: ONGNN
 num_layers: 8
