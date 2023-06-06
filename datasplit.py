@@ -11,6 +11,6 @@ for dataset in data_sets:
                     tmp = l.split()
                     x = tmp[1:]
                     random.shuffle(x)
-                    validf.write(f"{tmp[0]} {' '.join(x[:max(1, int(len(x) * 0.1))])}\n")
-                    splitedf.write(f"{tmp[0]} {' '.join(x[max(1, int(len(x) * 0.1)):])}\n")
+                    validf.write(f"{tmp[0]} {' '.join(x[:max(1, int(len(x) * 0.2))])}\n")
+                    splitedf.write(f"{tmp[0]} {' '.join(x[max(1, int(len(x) * 0.2)):])}\n")
         
