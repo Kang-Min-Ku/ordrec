@@ -10,6 +10,8 @@ import time
 from model.ordrec import OrdRec
 from model.GONN import GONN
 
+import secrets
+
 class Trainer:
     def __init__(self,
                  params,
@@ -87,15 +89,14 @@ class Trainer:
             if self.params["do_early_stop"] and self.early_stop:
                 print("==================================================")
                 print(f"Early Stop Training at epoch {epoch}")
+                print(f"Best {self.early_stop_policy}: {self.best_score}")
                 print("==================================================")
                 break
 
     def test(self):
         prec, recall, ndcg = self.eval_implicit(self.test_adj)
         print("Test Result")
-        print(f"(AE VALID) prec@{self.top_k} {prec}, recall@{self.top_k} {recall}, ndcg@{self.top_k} {ndcg}")
-    
-
+        print(f"(AE TEST) prec@{self.top_k} {prec}, recall@{self.top_k} {recall}, ndcg@{self.top_k} {ndcg}")
 
     def eval_implicit(self, targets):
         start = time.time()
@@ -125,3 +126,26 @@ class Trainer:
         print("Executed evaluation:",time.time() - start)
         
         return np.mean(prec_list), np.mean(recall_list), np.mean(ndcg_list)
+    
+    def save_model(self):
+        model_token = secrets.token_hex(5)
+        with open(f"{self.params['hyperparam_path']}/{model_token}.txt", "w") as fd:
+            fd.writelines(f"add_self_loops: {self.params['add_self_loops']}\n")
+            fd.writelines(f"dropout_rate: {self.params['dropout_rate']}\n")
+            fd.writelines(f"dropout_rate2: {self.params['dropout_rate2']}\n")
+            fd.writelines(f"epochs: {self.params['epochs']}\n")
+            fd.writelines(f"batch_size: {self.params['batch_size']}\n")
+            fd.writelines(f"in_channel: {self.params['in_channel']}\n")
+            fd.writelines(f"hidden_channel: {self.params['hidden_channel']}\n")
+            fd.writelines(f"out_channel: {self.params['out_channel']}\n")
+            fd.writelines(f"learning_rate: {self.params['learning_rate']}\n")
+            fd.writelines(f"weight_decay: {self.params['weight_decay']}\n")
+            fd.writelines(f"weight_decay2: {self.params['weight_decay2']}\n")
+            fd.writelines(f"num_layers: {self.params['num_layers']}\n")
+            fd.writelines(f"num_layers_input: {self.params['num_layers_input']}\n")
+            fd.writelines(f"do_early_stop: {self.params['do_early_stop']}\n")
+            fd.writelines(f"early_stop_policy: {self.params['early_stop_policy']}\n")
+            fd.writelines(f"seed: {self.params['seed']}\n")
+            fd.writelines(f"data: {self.params['data_path']}\n")
+
+        torch.save(self.model, f"{self.params['save_path']}/{model_token}.pt")
