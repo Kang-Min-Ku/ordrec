@@ -53,6 +53,8 @@ class Trainer:
         self.early_stop_policy = params["early_stop_policy"]
         self.patience = 0
         self.early_stop = False
+        #record
+        self.model_id = secrets.token_hex(5)
 
     def train(self):
         self.patience = 0
@@ -97,6 +99,8 @@ class Trainer:
         prec, recall, ndcg = self.eval_implicit(self.test_adj)
         print("Test Result")
         print(f"(AE TEST) prec@{self.top_k} {prec}, recall@{self.top_k} {recall}, ndcg@{self.top_k} {ndcg}")
+        with open(f"{self.params['hyperparam_path']}/{self.model_id}.txt", "a") as fd:
+            fd.writelines(f"\n\n(AE TEST) prec@{self.top_k} {prec}, recall@{self.top_k} {recall}, ndcg@{self.top_k} {ndcg}\n")
 
     def eval_implicit(self, targets):
         start = time.time()
@@ -128,8 +132,7 @@ class Trainer:
         return np.mean(prec_list), np.mean(recall_list), np.mean(ndcg_list)
     
     def save_model(self):
-        model_token = secrets.token_hex(5)
-        with open(f"{self.params['hyperparam_path']}/{model_token}.txt", "w") as fd:
+        with open(f"{self.params['hyperparam_path']}/{self.model_id}.txt", "w") as fd:
             fd.writelines(f"add_self_loops: {self.params['add_self_loops']}\n")
             fd.writelines(f"dropout_rate: {self.params['dropout_rate']}\n")
             fd.writelines(f"dropout_rate2: {self.params['dropout_rate2']}\n")
@@ -148,4 +151,4 @@ class Trainer:
             fd.writelines(f"seed: {self.params['seed']}\n")
             fd.writelines(f"data: {self.params['data_path']}\n")
 
-        torch.save(self.model, f"{self.params['save_path']}/{model_token}.pt")
+        torch.save(self.model, f"{self.params['save_path']}/{self.model_id}.pt")
