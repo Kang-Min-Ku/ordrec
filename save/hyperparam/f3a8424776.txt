@@ -1,0 +1,1 @@
+add_self_loops: Truedropout_rate: 0.2dropout_rate2: 0.2epochs: 512batch_size: 2048in_channel: 256hidden_channel: 256out_channel: 256learning_rate: 0.001weight_decay: 0.005weight_decay2: 0.05num_layers: 6num_layers_input: 2do_early_stop: Falseearly_stop_policy: ndcgseed: 42data: dataset/movielens100k
