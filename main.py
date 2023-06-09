@@ -22,5 +22,5 @@ num_users, num_items, train_adj, train_unique_users, valid_data, test_data = loa
 trainer = Trainer(config, num_users, num_items, train_adj=train_adj, valid_adj=valid_data, test_adj=test_data)
 trainer.train()
 
-trainer.test()
 trainer.save_model()
+trainer.test()
