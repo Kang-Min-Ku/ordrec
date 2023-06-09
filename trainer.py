@@ -100,7 +100,15 @@ class Trainer:
         print("Test Result")
         print(f"(AE TEST) prec@{self.top_k} {prec}, recall@{self.top_k} {recall}, ndcg@{self.top_k} {ndcg}")
         with open(f"{self.params['hyperparam_path']}/{self.model_id}.txt", "a") as fd:
-            fd.writelines(f"\n\n(AE TEST) prec@{self.top_k} {prec}, recall@{self.top_k} {recall}, ndcg@{self.top_k} {ndcg}\n")
+            fd.write(f"\n\n(AE TEST) prec@{self.top_k} {prec}, recall@{self.top_k} {recall}, ndcg@{self.top_k} {ndcg}\n")
+        
+    def test_tuning(self):
+        prec, recall, ndcg = self.eval_implicit(self.test_adj)
+        print("Test Result")
+        print(f"(AE TEST) prec@{self.top_k} {prec}, recall@{self.top_k} {recall}, ndcg@{self.top_k} {ndcg}")
+        with open(f"{self.params['hyperparam_path']}/{self.model_id}.txt", "a") as fd:
+            fd.write(f"\n\n(AE TEST) prec@{self.top_k} {prec}, recall@{self.top_k} {recall}, ndcg@{self.top_k} {ndcg}\n")
+        return prec, recall, ndcg    
 
     def eval_implicit(self, targets):
         start = time.time()
