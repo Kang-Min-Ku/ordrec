@@ -1,12 +1,19 @@
 from model.layer import ONGNNConv
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import Module, ModuleList, Linear, LayerNorm
 
 class GONN(Module):
-    def __init__(self, params):
+    def __init__(self, params, num_users, num_items):
         super().__init__()
         self.params = params
+        self.num_users = num_users
+        self.num_items = num_items
+        self.num_nodes = self.num_users+self.num_items
+         
+        self.x = nn.Embedding(self.num_nodes, self.params['in_channel'])
+
         self.linear_trans_in = ModuleList()
         self.linear_trans_out = Linear(params['hidden_channel'], params['out_channel'])
         self.norm_input = ModuleList()
@@ -40,8 +47,13 @@ class GONN(Module):
         self.params_conv = list(set(list(self.convs.parameters())+list(self.tm_net.parameters())))
         self.params_others = list(self.linear_trans_in.parameters())+list(self.linear_trans_out.parameters())
 
-    def forward(self, x, edge_index):
+    def init_embedding(self):
+        nn.init.xavier_uniform_(self.x)
+
+    def forward(self, user_idx, edge_index):
         check_signal = []
+        
+        x = self.x(torch.arange(self.num_nodes).cuda())
 
         for i in range(len(self.linear_trans_in)):
             x = F.dropout(x, p=self.params['dropout_rate'], training=self.training)
@@ -60,7 +72,14 @@ class GONN(Module):
 
         x = F.dropout(x, p=self.params['dropout_rate'], training=self.training)
         x = self.linear_trans_out(x)
-
-        #encode_values = dict(zip(['x', 'check_signal'], [x, check_signal]))
         
-        return x
+        user_embedding = x[user_idx]
+        item_embedding = x[self.num_users:]
+      
+        return user_embedding, item_embedding
+    
+    def train_batch(self, user_idx, edge_index):
+        user_embedding, item_embedding = self.forward(user_idx, edge_index)
+        return torch.matmul(user_embedding, item_embedding.t())
+
+

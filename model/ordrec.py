@@ -12,7 +12,7 @@ class OrdRec(nn.Module):
         self.num_nodes = self.num_users + self.num_items
 
         self.GONN = GONN(self.params)
-        self.x = nn.Parameter(torch.empty(self.num_nodes, self.params['in_channel'], dtype=torch.float))
+        self.x = nn.Parameter(torch.empty(self.num_nodes, self.params['in_channel'], dtype=torch.float), requires_grad=True)
         #self.embedding = nn.Embedding(self.num_nodes, self.params['in_channel'])
 
         self.init_embedding()
@@ -23,8 +23,9 @@ class OrdRec(nn.Module):
     def forward(self, user_idx, edge_index):
         if self.train():
             assert torch.all(user_idx < self.num_users)
+        
         all_embedding = self.GONN(self.x, edge_index)
-
+        
         #user_embedding = embedding[:self.num_users]
         user_embedding = all_embedding[user_idx]
         item_embedding = all_embedding[self.num_users:]

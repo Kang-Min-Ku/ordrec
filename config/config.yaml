@@ -1,17 +1,18 @@
 use_cuda: true
-add_self_loops: false
+add_self_loops: true
 agent_package: 100
 chunk_size: 64
 diff_or: true
-dropout_rate: 0
-dropout_rate2: 0
+dropout_rate: 0.2
+dropout_rate2: 0.2
 train_valid_split: true
 train_valid_split_rate:
 - 0.8
 - 0.2
-epochs: 2000
+epochs: 512
+print_every: 3
 full_batch: false
-batch_size: 128
+batch_size: 2048
 global_gating: false
 in_channel: 256
 hidden_channel: 256
@@ -27,17 +28,25 @@ index_split:
 - 7
 - 8
 - 9
-learning_rate: 0.01
+learning_rate: 0.001
 log_freq: 200
 model: ONGNN
-num_layers: 8
+num_layers: 6
 num_layers_input: 2
-patience: 200
-save_model: false
+# early stop
+do_early_stop: false
+early_stop_policy: ndcg #loss, recall, precision, ndcg
+early_stop_threshold: 5
+#
+save_model: true
 seed: 42
 simple_gating: false
 # task: Actor
-data_path: dataset/gowalla
+data_path: dataset/movielens100k
 tm: true
-weight_decay: 0.0005
+weight_decay: 0.005
 weight_decay2: 0.05
+# save model
+save_model: true
+hyperparam_path: save/hyperparam
+save_path: save/model
